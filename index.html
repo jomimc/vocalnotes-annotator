@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Syllable Annotator</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<header class="toolbar" role="toolbar" aria-label="Main toolbar">
+  <div class="group">
+    <button id="btn-open" title="Open a track folder (Ctrl+O)">Open folder</button>
+    <input id="dir-input" type="file" webkitdirectory multiple hidden>
+    <span id="track-name" class="track-name">No track loaded</span>
+  </div>
+  <div class="group" aria-label="Playback">
+    <button id="btn-play" title="Play / pause (Space)" disabled>▶ Play</button>
+    <label title="Playback speed ([ and ])">Speed
+      <select id="sel-speed" disabled>
+        <option value="0.25">0.25×</option><option value="0.5">0.5×</option>
+        <option value="0.75">0.75×</option><option value="1" selected>1×</option>
+        <option value="1.25">1.25×</option>
+      </select>
+    </label>
+    <label title="Click at each syllable onset during playback (C)"><input id="chk-clicks" type="checkbox"> Clicks</label>
+    <span id="time-readout" class="readout" aria-live="off">0:00.00</span>
+  </div>
+  <div class="group" aria-label="Lanes">
+    <label><input id="chk-wave" type="checkbox" checked> Waveform</label>
+    <label><input id="chk-spec" type="checkbox"> Spectrogram</label>
+    <label><input id="chk-pitch" type="checkbox" checked> f0 / notes</label>
+  </div>
+  <div class="group" aria-label="Annotation">
+    <label title="Which syllable file to edit">Edit
+      <select id="sel-layer" disabled></select>
+    </label>
+    <button id="btn-undo" title="Undo (Ctrl+Z)" disabled>Undo</button>
+    <button id="btn-redo" title="Redo (Ctrl+Shift+Z)" disabled>Redo</button>
+    <button id="btn-save" class="primary" title="Save (Ctrl+S)" disabled>Save</button>
+    <button id="btn-help" title="Keyboard and mouse help (?)">?</button>
+  </div>
+</header>
+
+<main id="main">
+  <div id="empty-state" class="empty-state">
+    <h1>Syllable Annotator</h1>
+    <p>Open a folder containing one audio file and, optionally, its annotations
+       (<code>*notes.csv</code>, <code>*pitches.csv</code>, <code>*syllables.csv</code>, <code>*.txt</code>).</p>
+    <p>Files are read in your browser only — nothing is uploaded. Your annotations are saved into an
+       <code>annotations/</code> folder inside the track folder (Chrome / Edge; other browsers download them instead).</p>
+    <p id="browser-note" class="muted" hidden>This browser cannot write into folders: saved files will go to Downloads.
+       Use Chrome or Edge to save directly into the track folder.</p>
+    <button id="btn-open-2" class="primary">Open folder</button>
+  </div>
+
+  <div id="workspace" hidden>
+    <canvas id="overview" class="overview" aria-label="Whole-track overview: drag to navigate"></canvas>
+    <div id="lanes" class="lanes">
+      <div class="lane" data-lane="wave"><span class="lane-label">Waveform</span><canvas id="cv-wave"></canvas></div>
+      <div class="lane" data-lane="spec" hidden><span class="lane-label">Spectrogram</span><canvas id="cv-spec"></canvas></div>
+      <div class="lane lane-tall" data-lane="pitch"><span class="lane-label">f0 / notes</span><canvas id="cv-pitch"></canvas>
+        <div id="pitch-legend" class="legend"></div></div>
+      <div class="lane" data-lane="syll"><span class="lane-label">Syllables</span><canvas id="cv-syll" tabindex="0"
+           aria-label="Syllable lane: click to add, right-click to delete, drag to move, double-click to edit"></canvas>
+        <input id="label-editor" class="label-editor" type="text" hidden aria-label="Edit syllable label"></div>
+      <canvas id="cv-axis" class="axis"></canvas>
+    </div>
+    <section id="text-panel" class="text-panel" aria-label="Text to place">
+      <div class="text-head">
+        <strong>Text</strong>
+        <label title="How the text is split into syllables">Split
+          <select id="sel-split"><option value="space">spaces &amp; hyphens</option><option value="char">characters (kana: morae)</option></select>
+        </label>
+        <label title="Each click in the syllable lane places the next unplaced syllable">
+          <input id="chk-place" type="checkbox" checked> Place next on click</label>
+        <span id="queue-info" class="muted"></span>
+      </div>
+      <div id="text-tokens" class="tokens"></div>
+    </section>
+  </div>
+</main>
+
+<footer class="statusbar"><span id="status" role="status">Ready.</span></footer>
+
+<dialog id="help-dialog">
+  <h2>Controls</h2>
+  <table>
+    <tr><th colspan="2">Syllable lane</th></tr>
+    <tr><td>Left-click</td><td>Add syllable onset and type its label (or take the next text syllable if “Place next” is on)</td></tr>
+    <tr><td>Right-click</td><td>Delete the nearest onset</td></tr>
+    <tr><td>Drag line or box</td><td>Move onset</td></tr>
+    <tr><td>Double-click box</td><td>Edit label (Enter = OK, Tab = next, Esc = cancel)</td></tr>
+    <tr><td>Shift while dragging / clicking</td><td>Snap to the nearest note onset</td></tr>
+    <tr><td>A</td><td>Add an onset at the playback cursor (tap along while playing)</td></tr>
+    <tr><td>Delete / Enter</td><td>Delete / edit the selected onset</td></tr>
+    <tr><td>Tab / Shift+Tab</td><td>Select next / previous onset (when the syllable lane has focus)</td></tr>
+    <tr><th colspan="2">Navigation</th></tr>
+    <tr><td>Mouse wheel</td><td>Zoom around the pointer</td></tr>
+    <tr><td>Shift + wheel / trackpad sideways / drag in other lanes</td><td>Scroll in time</td></tr>
+    <tr><td>Click in other lanes</td><td>Move playback cursor</td></tr>
+    <tr><td>Overview bar</td><td>Click or drag to jump</td></tr>
+    <tr><td>← / →</td><td>Scroll ½ window &nbsp; (+ Shift: move cursor 0.1 s)</td></tr>
+    <tr><td>+ / −</td><td>Zoom in / out</td></tr>
+    <tr><th colspan="2">Playback &amp; editing</th></tr>
+    <tr><td>Space</td><td>Play / pause from cursor</td></tr>
+    <tr><td>[ / ]</td><td>Slower / faster</td></tr>
+    <tr><td>C</td><td>Toggle clicks at onsets</td></tr>
+    <tr><td>Ctrl+Z / Ctrl+Shift+Z</td><td>Undo / redo</td></tr>
+    <tr><td>Ctrl+S</td><td>Save (to annotations/ in the track folder)</td></tr>
+    <tr><td>Ctrl+O</td><td>Open folder</td></tr>
+  </table>
+  <form method="dialog"><button>Close</button></form>
+</dialog>
+
+<script type="module" src="js/main.js"></script>
+</body>
+</html>

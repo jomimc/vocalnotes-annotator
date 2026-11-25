@@ -1,0 +1,69 @@
+:root {
+  --bg: #fcfcfb; --surface: #ffffff; --ink: #0b0b0b; --ink2: #52514e; --muted: #8a897f;
+  --line: #d9d8d2; --accent: #2a78d6; --accent-weak: #cde2fb; --playhead: #d6213a;
+  --syll: #0b0b0b; --syll-box: #f0efec; --syll-sel: #eb6834;
+  --lane-h: 110px; --lane-tall-h: 220px;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans", "Noto Sans CJK JP", "Noto Sans Hebrew", sans-serif;
+  color: var(--ink); background: var(--bg);
+}
+@media (prefers-color-scheme: dark) {
+  :root { --bg: #1a1a19; --surface: #222220; --ink: #f0efec; --ink2: #c3c2b7; --muted: #8a897f;
+          --line: #3a3a37; --accent: #3987e5; --accent-weak: #1c3a5e; --syll: #f0efec; --syll-box: #2e2e2b; }
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; }
+body { display: flex; flex-direction: column; }
+button, select, input { font: inherit; color: inherit; }
+button { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 4px 10px; cursor: pointer; }
+button:hover:not(:disabled) { border-color: var(--accent); }
+button:disabled { opacity: .45; cursor: default; }
+button.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+select { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 3px 4px; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+.toolbar { display: flex; flex-wrap: wrap; gap: 8px 18px; align-items: center; padding: 8px 12px;
+           border-bottom: 1px solid var(--line); background: var(--surface); }
+.toolbar .group { display: flex; gap: 8px; align-items: center; }
+.toolbar label { display: flex; gap: 4px; align-items: center; color: var(--ink2); font-size: 14px; }
+.track-name { font-weight: 600; max-width: 32ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.readout { font-variant-numeric: tabular-nums; min-width: 8ch; color: var(--ink2); }
+
+main { flex: 1; overflow: auto; }
+.empty-state { max-width: 640px; margin: 12vh auto; text-align: center; color: var(--ink2); }
+.empty-state h1 { color: var(--ink); }
+
+#workspace { padding: 8px 12px 0; }
+.overview { width: 100%; height: 36px; display: block; cursor: pointer; border: 1px solid var(--line);
+            border-radius: 6px; background: var(--surface); }
+.lanes { margin-top: 8px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface);
+         overflow: hidden; user-select: none; }
+.lane { position: relative; height: var(--lane-h); border-bottom: 1px solid var(--line); }
+.lane.lane-tall { height: var(--lane-tall-h); }
+.lane[data-lane="syll"] { height: 64px; }
+.lane canvas { width: 100%; height: 100%; display: block; touch-action: none; }
+.overview, .axis { touch-action: none; }
+.lane[data-lane="syll"] canvas { cursor: crosshair; }
+.lane[data-lane="wave"] canvas, .lane[data-lane="spec"] canvas, .lane[data-lane="pitch"] canvas { cursor: text; }
+.lane-label { position: absolute; top: 3px; left: 6px; font-size: 11px; color: var(--muted); pointer-events: none;
+              background: color-mix(in srgb, var(--surface) 75%, transparent); padding: 0 3px; border-radius: 3px; z-index: 1; }
+.axis { width: 100%; height: 22px; display: block; }
+.legend { position: absolute; top: 3px; right: 6px; display: flex; gap: 10px; font-size: 12px; z-index: 1; }
+.legend label { display: flex; gap: 4px; align-items: center; cursor: pointer; }
+.legend .swatch { width: 14px; height: 3px; border-radius: 2px; display: inline-block; }
+
+.label-editor { position: absolute; top: 20px; height: 26px; min-width: 60px; padding: 2px 4px; z-index: 2;
+                border: 2px solid var(--syll-sel); border-radius: 4px; background: var(--surface); }
+
+.text-panel { margin: 8px 0; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); padding: 8px 10px; }
+.text-head { display: flex; gap: 16px; align-items: center; font-size: 14px; color: var(--ink2); flex-wrap: wrap; }
+.tokens { margin-top: 6px; line-height: 1.9; max-height: 120px; overflow: auto; }
+.tokens span { padding: 1px 4px; margin-right: 2px; border-radius: 4px; cursor: pointer; }
+.tokens span.placed { color: var(--muted); }
+.tokens span.next { background: var(--accent-weak); outline: 1px solid var(--accent); }
+.muted { color: var(--muted); }
+
+.statusbar { border-top: 1px solid var(--line); padding: 4px 12px; font-size: 13px; color: var(--ink2); background: var(--surface); }
+dialog { border: 1px solid var(--line); border-radius: 8px; background: var(--surface); color: var(--ink); }
+dialog table { border-collapse: collapse; font-size: 14px; }
+dialog td, dialog th { padding: 3px 10px; text-align: left; }
+dialog th { padding-top: 10px; color: var(--ink2); }
